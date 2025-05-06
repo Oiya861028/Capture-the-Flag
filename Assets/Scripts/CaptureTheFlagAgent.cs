@@ -1,6 +1,7 @@
 using UnityEngine;
+using UnityEngine.MLAgents;
 
-public class NewMonoBehaviourScript : MonoBehaviour
+public class CaptureTheFlagAgent : agent
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
