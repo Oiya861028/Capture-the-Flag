@@ -20,6 +20,10 @@ public class GameManager : MonoBehaviour
     public Transform redReleasePosition;
     public Transform blueReleasePosition;
     
+    [Header("Base Areas")]
+    public Transform redBase;
+    public Transform blueBase;
+    
     // Team Groups for MA-POCA
     private SimpleMultiAgentGroup redTeamGroup;
     private SimpleMultiAgentGroup blueTeamGroup;
@@ -45,8 +49,8 @@ public class GameManager : MonoBehaviour
         SetupFlag(blueFlag, Team.Blue);
         
         // Make sure base areas have the Base component
-        SetupBase(redFlag.parent, Team.Red);
-        SetupBase(blueFlag.parent, Team.Blue);
+        SetupBase(redBase, Team.Red);
+        SetupBase(blueBase, Team.Blue);
         
         // Initialize MA-POCA team groups
         redTeamGroup = new SimpleMultiAgentGroup();
@@ -56,8 +60,17 @@ public class GameManager : MonoBehaviour
         FindAndSetupAgents();
         
         // Save flag starting positions
-        redFlagStartPos = redFlag.position;
-        blueFlagStartPos = blueFlag.position;
+        if (redFlag != null) redFlagStartPos = redFlag.position;
+        if (blueFlag != null) blueFlagStartPos = blueFlag.position;
+        
+        // Make sure we have the correct tags in the project
+        CheckAndCreateTags();
+    }
+    
+    void CheckAndCreateTags()
+    {
+        // This won't actually create tags at runtime, but it's a reminder for you
+        Debug.Log("Make sure you have these tags in your project: Agent, Flag, Base, Obstacle");
     }
     
     void Start()
@@ -187,19 +200,23 @@ public class GameManager : MonoBehaviour
     private void ResetFlags()
     {
         // Reset flag positions
-        redFlag.position = redFlagStartPos;
-        blueFlag.position = blueFlagStartPos;
+        if (redFlag != null)
+        {
+            redFlag.position = redFlagStartPos;
+            redFlag.gameObject.SetActive(true);
+            
+            Flag redFlagComponent = redFlag.GetComponent<Flag>();
+            if (redFlagComponent != null) redFlagComponent.isCarried = false;
+        }
         
-        // Enable flag visuals
-        redFlag.gameObject.SetActive(true);
-        blueFlag.gameObject.SetActive(true);
-        
-        // Reset flag components
-        Flag redFlagComponent = redFlag.GetComponent<Flag>();
-        Flag blueFlagComponent = blueFlag.GetComponent<Flag>();
-        
-        if (redFlagComponent != null) redFlagComponent.isCarried = false;
-        if (blueFlagComponent != null) blueFlagComponent.isCarried = false;
+        if (blueFlag != null)
+        {
+            blueFlag.position = blueFlagStartPos;
+            blueFlag.gameObject.SetActive(true);
+            
+            Flag blueFlagComponent = blueFlag.GetComponent<Flag>();
+            if (blueFlagComponent != null) blueFlagComponent.isCarried = false;
+        }
     }
     
     public void FlagPickedUp(Team flagTeam)
@@ -229,11 +246,14 @@ public class GameManager : MonoBehaviour
             redScore++;
             
             // Return blue flag
-            blueFlag.position = blueFlagStartPos;
-            blueFlag.gameObject.SetActive(true);
-            
-            Flag blueFlagComponent = this.blueFlag.GetComponent<Flag>();
-            if (blueFlagComponent != null) blueFlagComponent.isCarried = false;
+            if (blueFlag != null)
+            {
+                blueFlag.position = blueFlagStartPos;
+                blueFlag.gameObject.SetActive(true);
+                
+                Flag blueFlagComponent = blueFlag.GetComponent<Flag>();
+                if (blueFlagComponent != null) blueFlagComponent.isCarried = false;
+            }
             
             // Check for win
             if (redScore >= scoreToWin)
@@ -249,11 +269,14 @@ public class GameManager : MonoBehaviour
             blueScore++;
             
             // Return red flag
-            redFlag.position = redFlagStartPos;
-            redFlag.gameObject.SetActive(true);
-            
-            Flag redFlagComponent = this.redFlag.GetComponent<Flag>();
-            if (redFlagComponent != null) redFlagComponent.isCarried = false;
+            if (redFlag != null)
+            {
+                redFlag.position = redFlagStartPos;
+                redFlag.gameObject.SetActive(true);
+                
+                Flag redFlagComponent = redFlag.GetComponent<Flag>();
+                if (redFlagComponent != null) redFlagComponent.isCarried = false;
+            }
             
             // Check for win
             if (blueScore >= scoreToWin)
@@ -270,19 +293,25 @@ public class GameManager : MonoBehaviour
     {
         if (flagTeam == Team.Red)
         {
-            redFlag.position = redFlagStartPos;
-            redFlag.gameObject.SetActive(true);
-            
-            Flag redFlagComponent = this.redFlag.GetComponent<Flag>();
-            if (redFlagComponent != null) redFlagComponent.isCarried = false;
+            if (redFlag != null)
+            {
+                redFlag.position = redFlagStartPos;
+                redFlag.gameObject.SetActive(true);
+                
+                Flag redFlagComponent = redFlag.GetComponent<Flag>();
+                if (redFlagComponent != null) redFlagComponent.isCarried = false;
+            }
         }
         else
         {
-            blueFlag.position = blueFlagStartPos;
-            blueFlag.gameObject.SetActive(true);
-            
-            Flag blueFlagComponent = this.blueFlag.GetComponent<Flag>();
-            if (blueFlagComponent != null) blueFlagComponent.isCarried = false;
+            if (blueFlag != null)
+            {
+                blueFlag.position = blueFlagStartPos;
+                blueFlag.gameObject.SetActive(true);
+                
+                Flag blueFlagComponent = blueFlag.GetComponent<Flag>();
+                if (blueFlagComponent != null) blueFlagComponent.isCarried = false;
+            }
         }
     }
     
@@ -297,17 +326,4 @@ public class GameManager : MonoBehaviour
         // Reset the game
         ResetGame();
     }
-}
-
-// Simple Flag class
-public class Flag : MonoBehaviour
-{
-    public CaptureTheFlagAgent.Team team;
-    public bool isCarried = false;
-}
-
-// Simple Base class
-public class Base : MonoBehaviour
-{
-    public CaptureTheFlagAgent.Team team;
 }

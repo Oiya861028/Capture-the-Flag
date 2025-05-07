@@ -22,11 +22,21 @@ public class CaptureTheFlagAgent : Agent
     public Transform enemyFlag;
     public Transform jailPosition;
     public Transform releasePosition;
+    public Transform ownBase;  // Reference to our team's base
     
     [Header("Raycast Settings")]
     public float rayLength = 20f;
     public int numRays = 5;
     public float rayAngle = 120f;
+    
+    [Header("Reward Settings")]
+    public float getFlagReward = 0.5f;
+    public float returnFlagReward = 1.0f;
+    public float tagOpponentReward = 0.1f;
+    public float tagFlagCarrierReward = 0.3f;
+    public float jailedPenalty = -0.2f;
+    public float idlePenalty = -0.01f;
+    public float wallProximityPenalty = -0.01f;
     
     // State variables
     private bool hasFlag = false;
@@ -70,7 +80,7 @@ public class CaptureTheFlagAgent : Agent
         {
             sensorComponent = gameObject.AddComponent<RayPerceptionSensorComponent3D>();
             sensorComponent.RayLength = rayLength;
-            sensorComponent.DetectableTags = new List<string> { "Wall", "Agent", "Flag", "Base" };
+            sensorComponent.DetectableTags = new List<string> { "Obstacle", "Agent", "Flag", "Base" };
             sensorComponent.RaysPerDirection = numRays / 2;
             sensorComponent.MaxRayDegrees = rayAngle / 2;
             sensorComponent.SphereCastRadius = 0.5f;
@@ -94,7 +104,9 @@ public class CaptureTheFlagAgent : Agent
         // Make sure we have a collider
         if (GetComponent<Collider>() == null)
         {
-            gameObject.AddComponent<CapsuleCollider>();
+            CapsuleCollider capsuleCollider = gameObject.AddComponent<CapsuleCollider>();
+            capsuleCollider.height = 2f;
+            capsuleCollider.radius = 0.5f;
         }
         
         // Set the tag
@@ -112,6 +124,12 @@ public class CaptureTheFlagAgent : Agent
         if (flagIndicator != null)
         {
             flagIndicator.SetActive(false);
+        }
+        
+        // Get reference to own base if not set
+        if (ownBase == null && gameManager != null)
+        {
+            ownBase = team == Team.Red ? gameManager.redBase : gameManager.blueBase;
         }
     }
     
@@ -182,14 +200,154 @@ public class CaptureTheFlagAgent : Agent
         float moveValue = moveAction - 1;
         float turnValue = turnAction - 1;
         
-        // Apply movement
+        // Check if we would hit a wall before moving
+        if (moveValue != 0 && !WouldHitWall(transform.forward * moveValue, moveSpeed * Time.fixedDeltaTime * 1.1f))
+        {
+            // Apply movement if we won't hit a wall
+            transform.Translate(0, 0, moveValue * moveSpeed * Time.fixedDeltaTime);
+        }
+        
+        // Apply rotation
         transform.Rotate(0, turnValue * turnSpeed * Time.fixedDeltaTime, 0);
-        transform.Translate(0, 0, moveValue * moveSpeed * Time.fixedDeltaTime);
         
         // Small negative reward for standing still
         if (moveAction == 1 && turnAction == 1)
         {
-            AddReward(-0.01f);
+            AddReward(idlePenalty);
+        }
+        
+        // Apply positional rewards
+        PositionalRewards();
+    }
+    
+    bool WouldHitWall(Vector3 moveDirection, float distance)
+    {
+        // Cast a ray to check if we would hit a wall
+        if (Physics.Raycast(transform.position, moveDirection, out RaycastHit hit, distance))
+        {
+            if (hit.collider.CompareTag("Obstacle"))
+            {
+                return true; // Would hit a wall
+            }
+        }
+        return false; // Safe to move
+    }
+    
+    private void PositionalRewards()
+    {
+        // Skip if in jail
+        if (inJail) return;
+        
+        // Small wall avoidance reward
+        if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, 1.0f))
+        {
+            if (hit.collider.CompareTag("Obstacle"))
+            {
+                // Penalty for being too close to walls
+                AddReward(wallProximityPenalty);
+            }
+        }
+        
+        // Reward for moving toward enemy flag when on offense
+        if (!hasFlag && enemyFlag.gameObject.activeSelf && IsOnEnemySide())
+        {
+            // Calculate direction to enemy flag
+            Vector3 dirToFlag = (enemyFlag.position - transform.position).normalized;
+            float movingTowardFlag = Vector3.Dot(transform.forward, dirToFlag);
+            
+            // Reward if moving toward flag
+            if (movingTowardFlag > 0.5f)
+            {
+                AddReward(0.005f);
+            }
+            
+            // Extra reward for getting closer to the flag
+            float distToFlag = Vector3.Distance(transform.position, enemyFlag.position);
+            if (distToFlag < 5f)
+            {
+                AddReward(0.01f * (1f - distToFlag/5f));
+            }
+        }
+        
+        // Reward for moving back to own base when carrying flag
+        if (hasFlag)
+        {
+            // Calculate direction to own base
+            Vector3 dirToBase = (ownBase.position - transform.position).normalized;
+            float movingTowardBase = Vector3.Dot(transform.forward, dirToBase);
+            
+            // Reward if moving toward own base
+            if (movingTowardBase > 0.5f)
+            {
+                AddReward(0.01f);
+            }
+            
+            // Extra reward for getting closer to base
+            float distToBase = Vector3.Distance(transform.position, ownBase.position);
+            if (distToBase < 10f)
+            {
+                AddReward(0.02f * (1f - distToBase/10f));
+            }
+        }
+        
+        // Defensive positioning reward
+        if (!hasFlag && !IsOnEnemySide())
+        {
+            // If enemy has our flag, reward for chasing the flag carrier
+            CaptureTheFlagAgent flagCarrier = FindFlagCarrier(team == Team.Red ? Team.Blue : Team.Red);
+            if (flagCarrier != null)
+            {
+                Vector3 dirToCarrier = (flagCarrier.transform.position - transform.position).normalized;
+                float movingTowardCarrier = Vector3.Dot(transform.forward, dirToCarrier);
+                
+                if (movingTowardCarrier > 0.5f)
+                {
+                    AddReward(0.008f);
+                }
+                
+                // Extra reward for getting closer to flag carrier
+                float distToCarrier = Vector3.Distance(transform.position, flagCarrier.transform.position);
+                if (distToCarrier < 5f)
+                {
+                    AddReward(0.015f * (1f - distToCarrier/5f));
+                }
+            }
+            // Otherwise reward for guarding own flag
+            else
+            {
+                float distToOwnFlag = Vector3.Distance(transform.position, ownFlag.position);
+                if (distToOwnFlag < 10f)
+                {
+                    // Higher reward the closer you are to flag, up to a point
+                    AddReward(0.003f * Mathf.Clamp(1f - (distToOwnFlag / 10f), 0.2f, 1f));
+                }
+            }
+        }
+    }
+    
+    // Helper method to find the agent carrying the flag
+    private CaptureTheFlagAgent FindFlagCarrier(Team targetTeam)
+    {
+        CaptureTheFlagAgent[] agents = FindObjectsOfType<CaptureTheFlagAgent>();
+        foreach (var agent in agents)
+        {
+            if (agent.team == targetTeam && agent.hasFlag)
+            {
+                return agent;
+            }
+        }
+        return null;
+    }
+    
+    private void RewardForTagging(CaptureTheFlagAgent taggedAgent)
+    {
+        // Base reward for tagging
+        AddReward(tagOpponentReward);
+        
+        // Extra reward if they were carrying our flag
+        if (taggedAgent.hasFlag)
+        {
+            AddReward(tagFlagCarrierReward);
         }
     }
     
@@ -213,6 +371,18 @@ public class CaptureTheFlagAgent : Agent
             discreteActions[1] = 2; // Right
         else
             discreteActions[1] = 1; // No turning
+    }
+    
+    // Direct movement for testing - use only when behavior type is Heuristic
+    void Update()
+    {
+        // Only use direct controls if in Heuristic mode
+        var behaviorParams = GetComponent<BehaviorParameters>();
+        if (behaviorParams != null && behaviorParams.BehaviorType == BehaviorType.HeuristicOnly)
+        {
+            // Request a decision manually to make sure the agent is updated
+            RequestDecision();
+        }
     }
     
     void OnCollisionEnter(Collision collision)
@@ -245,14 +415,19 @@ public class CaptureTheFlagAgent : Agent
                 else if (otherAgent.hasFlag && otherAgent.IsOnEnemySide())
                 {
                     otherAgent.SendToJail();
+                    // Reward for successful tagging
+                    RewardForTagging(otherAgent);
                 }
             }
         }
-        
+    }
+    
+    void OnTriggerEnter(Collider other)
+    {
         // Check for scoring
-        if (hasFlag && collision.gameObject.CompareTag("Base"))
+        if (hasFlag && other.CompareTag("Base"))
         {
-            Base baseObj = collision.gameObject.GetComponent<Base>();
+            Base baseObj = other.GetComponent<Base>();
             if (baseObj != null && baseObj.team == team)
             {
                 ScoreFlag();
@@ -275,6 +450,9 @@ public class CaptureTheFlagAgent : Agent
         {
             gameManager.FlagPickedUp(team == Team.Red ? Team.Blue : Team.Red);
         }
+        
+        // BIG reward for getting the flag
+        AddReward(getFlagReward);
     }
     
     void ScoreFlag()
@@ -294,7 +472,7 @@ public class CaptureTheFlagAgent : Agent
         }
         
         // Reward for scoring a flag
-        AddReward(1.0f);
+        AddReward(returnFlagReward);
     }
     
     public void SendToJail()
@@ -322,7 +500,7 @@ public class CaptureTheFlagAgent : Agent
         rb.linearVelocity = Vector3.zero;
         
         // Penalty for getting caught
-        AddReward(-0.2f);
+        AddReward(jailedPenalty);
     }
     
     public void ReleaseFromJail()
@@ -335,9 +513,9 @@ public class CaptureTheFlagAgent : Agent
     {
         // Assuming field is divided at x=0
         if (team == Team.Red)
-            return transform.position.x < 0;
+            return transform.position.x >0;
         else
-            return transform.position.x > 0;
+            return transform.position.x <0;
     }
     
     public bool IsOnEnemySide()

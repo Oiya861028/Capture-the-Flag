@@ -5,6 +5,11 @@ TagManager:
   serializedVersion: 3
   tags:
   - Floor
+  - Agent
+  - Flag
+  - Base
+  - Wall
+  - Obstacle
   layers:
   - Default
   - TransparentFX
