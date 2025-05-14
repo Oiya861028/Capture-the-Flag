@@ -420,6 +420,10 @@ public class CaptureTheFlagAgent : Agent
                 }
             }
         }
+        if (collision.gameObject.CompareTag("Wall"))
+        {
+            AddReward(wallProximityPenalty);
+        }
     }
     
     void OnTriggerEnter(Collider other)
