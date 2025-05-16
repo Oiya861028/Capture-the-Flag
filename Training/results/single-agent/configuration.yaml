@@ -71,7 +71,7 @@ engine_settings:
   no_graphics_monitor: false
 environment_parameters: null
 checkpoint_settings:
-  run_id: CTF01
+  run_id: single-agent
   initialize_from: null
   load_model: false
   resume: false

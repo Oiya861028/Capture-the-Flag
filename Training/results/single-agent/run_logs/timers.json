@@ -1,0 +1,47 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1747242192",
+        "python_version": "3.10.12 | packaged by Anaconda, Inc. | (main, Jul  5 2023, 19:01:18) [MSC v.1916 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\yubin\\Anaconda3\\envs\\mlagents\\Scripts\\mlagents-learn Config\\CTF_Config.yaml --run-id=single-agent --force",
+        "mlagents_version": "1.1.0",
+        "mlagents_envs_version": "1.1.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.2.2+cu121",
+        "numpy_version": "1.23.5",
+        "end_time_seconds": "1747242195"
+    },
+    "total": 2.6363873000009335,
+    "count": 1,
+    "self": 0.01895900000090478,
+    "children": {
+        "run_training.setup": {
+            "total": 0.07587520000015502,
+            "count": 1,
+            "self": 0.07587520000015502
+        },
+        "TrainerController.start_learning": {
+            "total": 2.5415530999998737,
+            "count": 1,
+            "self": 0.0013436000008368865,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 2.540174300000217,
+                    "count": 1,
+                    "self": 2.540174300000217
+                },
+                "trainer_threads": {
+                    "total": 4.19999923906289e-06,
+                    "count": 1,
+                    "self": 4.19999923906289e-06
+                },
+                "TrainerController._save_models": {
+                    "total": 3.099999958067201e-05,
+                    "count": 1,
+                    "self": 3.099999958067201e-05
+                }
+            }
+        }
+    }
+}

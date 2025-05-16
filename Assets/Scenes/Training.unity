@@ -725,7 +725,7 @@ MonoBehaviour:
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: My Behavior
+  m_BehaviorName: CTF
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1
@@ -941,7 +941,7 @@ MonoBehaviour:
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: My Behavior
+  m_BehaviorName: CTF
   TeamId: 1
   m_UseChildSensors: 1
   m_UseChildActuators: 1
@@ -1007,7 +1007,7 @@ MonoBehaviour:
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: My Behavior
+  m_BehaviorName: CTF
   TeamId: 1
   m_UseChildSensors: 1
   m_UseChildActuators: 1
@@ -1439,13 +1439,14 @@ GameObject:
   - component: {fileID: 4319960582454558914}
   - component: {fileID: 1247421484}
   - component: {fileID: 1447244278}
+  - component: {fileID: 8570184538188903751}
   m_Layer: 0
   m_Name: RedAgent3
   m_TagString: Agent
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2361534507280835223
 Transform:
   m_ObjectHideFlags: 0
@@ -1477,13 +1478,14 @@ GameObject:
   - component: {fileID: 1640357277}
   - component: {fileID: 2109647977}
   - component: {fileID: 1719139642}
+  - component: {fileID: 7769484696691812884}
   m_Layer: 0
   m_Name: BlueAgent1
   m_TagString: Agent
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2841742290436742328
 Transform:
   m_ObjectHideFlags: 0
@@ -1518,6 +1520,7 @@ GameObject:
   - component: {fileID: 4319960582454558916}
   - component: {fileID: 4319960582454558927}
   - component: {fileID: 4319960582454558929}
+  - component: {fileID: 7232606919242116638}
   m_Layer: 0
   m_Name: RedAgent1
   m_TagString: Agent
@@ -1557,13 +1560,14 @@ GameObject:
   - component: {fileID: 1092705840}
   - component: {fileID: 372130543}
   - component: {fileID: 1378595526}
+  - component: {fileID: 7345823330992784440}
   m_Layer: 0
   m_Name: RedAgent2
   m_TagString: Agent
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1 &3221634583480746898
 GameObject:
   m_ObjectHideFlags: 0
@@ -1909,7 +1913,7 @@ MonoBehaviour:
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: My Behavior
+  m_BehaviorName: CTF
   TeamId: 1
   m_UseChildSensors: 1
   m_UseChildActuators: 1
@@ -1975,7 +1979,7 @@ MonoBehaviour:
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: My Behavior
+  m_BehaviorName: CTF
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1
@@ -2040,8 +2044,8 @@ MonoBehaviour:
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
-  m_BehaviorType: 1
-  m_BehaviorName: My Behavior
+  m_BehaviorType: 0
+  m_BehaviorName: CTF
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1
@@ -2323,13 +2327,14 @@ GameObject:
   - component: {fileID: 4319960582454558912}
   - component: {fileID: 4319960582454558926}
   - component: {fileID: 4319960582454558928}
+  - component: {fileID: 8170721920072735189}
   m_Layer: 0
   m_Name: BlueAgent2
   m_TagString: Agent
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!23 &5279329915473146832
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2770,6 +2775,22 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7232606919242116638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2909371246109954648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 500000000
 --- !u!136 &7345823330992784439
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -2793,6 +2814,22 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7345823330992784440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3012577686329620594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 500000000
 --- !u!23 &7415025765838068792
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2891,6 +2928,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6030865185536542556}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &7769484696691812884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2624817324764035422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 500000000
 --- !u!4 &7814675920631560010
 Transform:
   m_ObjectHideFlags: 0
@@ -2929,6 +2982,22 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8170721920072735189
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5154814934684051601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 500000000
 --- !u!4 &8228521215488778248
 Transform:
   m_ObjectHideFlags: 0
@@ -2975,13 +3044,14 @@ GameObject:
   - component: {fileID: 1596647775}
   - component: {fileID: 2089220122}
   - component: {fileID: 625157184}
+  - component: {fileID: 8725115989939430478}
   m_Layer: 0
   m_Name: BlueAgent3
   m_TagString: Agent
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!23 &8570184538188903750
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3027,6 +3097,22 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &8570184538188903751
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2077424123277212428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 500000000
 --- !u!33 &8720459109475521148
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -3098,6 +3184,22 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8725115989939430478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8363083666118027876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 500000000
 --- !u!33 &9005195021004161459
 MeshFilter:
   m_ObjectHideFlags: 0
