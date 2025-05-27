@@ -1,0 +1,65 @@
+{
+    "CaptureTheFlag": {
+        "checkpoints": [
+            {
+                "steps": 623790,
+                "file_path": "results/CTF/CaptureTheFlag/CaptureTheFlag-623790.onnx",
+                "reward": null,
+                "creation_time": 1748365224.113224,
+                "auxillary_file_paths": [
+                    "results/CTF/CaptureTheFlag/CaptureTheFlag-623790.pt"
+                ]
+            },
+            {
+                "steps": 898524,
+                "file_path": "results/CTF/CaptureTheFlag/CaptureTheFlag-898524.onnx",
+                "reward": 7.34262933455102,
+                "creation_time": 1748366064.2393851,
+                "auxillary_file_paths": [
+                    "results/CTF/CaptureTheFlag/CaptureTheFlag-898524.pt"
+                ]
+            },
+            {
+                "steps": 999964,
+                "file_path": "results/CTF/CaptureTheFlag/CaptureTheFlag-999964.onnx",
+                "reward": null,
+                "creation_time": 1748366293.373527,
+                "auxillary_file_paths": [
+                    "results/CTF/CaptureTheFlag/CaptureTheFlag-999964.pt"
+                ]
+            },
+            {
+                "steps": 1021212,
+                "file_path": "results/CTF/CaptureTheFlag/CaptureTheFlag-1021212.onnx",
+                "reward": null,
+                "creation_time": 1748366313.016522,
+                "auxillary_file_paths": [
+                    "results/CTF/CaptureTheFlag/CaptureTheFlag-1021212.pt"
+                ]
+            },
+            {
+                "steps": 1110972,
+                "file_path": "results/CTF/CaptureTheFlag/CaptureTheFlag-1110972.onnx",
+                "reward": null,
+                "creation_time": 1748366582.658278,
+                "auxillary_file_paths": [
+                    "results/CTF/CaptureTheFlag/CaptureTheFlag-1110972.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1110972,
+            "file_path": "results/CTF/CaptureTheFlag.onnx",
+            "reward": null,
+            "creation_time": 1748366582.658278,
+            "auxillary_file_paths": [
+                "results/CTF/CaptureTheFlag/CaptureTheFlag-1110972.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "1.8.1"
+    }
+}

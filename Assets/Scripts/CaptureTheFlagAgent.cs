@@ -51,6 +51,9 @@ public class CaptureTheFlagAgent : Agent
     // Visual indicator for flag
     public GameObject flagIndicator;
     
+    // Debug tracking
+    private bool isHeuristicMode = false;
+    
     // Setup these components properly on Awake
     protected override void Awake()
     {
@@ -61,6 +64,7 @@ public class CaptureTheFlagAgent : Agent
         if (behaviorParams != null)
         {
             behaviorParams.TeamId = (int)team;
+            isHeuristicMode = (behaviorParams.BehaviorType == BehaviorType.HeuristicOnly);
         }
         
         // Configure the behavior parameters for MA-POCA
@@ -150,6 +154,13 @@ public class CaptureTheFlagAgent : Agent
         {
             flagIndicator.SetActive(false);
         }
+        
+        // Update heuristic mode status
+        var behaviorParams = GetComponent<BehaviorParameters>();
+        if (behaviorParams != null)
+        {
+            isHeuristicMode = (behaviorParams.BehaviorType == BehaviorType.HeuristicOnly);
+        }
     }
     
     public override void CollectObservations(VectorSensor sensor)
@@ -199,6 +210,16 @@ public class CaptureTheFlagAgent : Agent
         // Convert to -1, 0, 1
         float moveValue = moveAction - 1;
         float turnValue = turnAction - 1;
+        
+        // Debug ONLY when agent has flag AND is close to their own base
+        if (hasFlag && ownBase != null)
+        {
+            float distToBase = Vector3.Distance(transform.position, ownBase.position);
+            if (distToBase < 5f) // Only debug when within 5 units of base
+            {
+                Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG near OWN BASE - moving: {moveValue}, turning: {turnValue}, position: {transform.position}, distance: {distToBase:F2}");
+            }
+        }
         
         // Check if we would hit a wall before moving
         if (moveValue != 0 && !WouldHitWall(transform.forward * moveValue, moveSpeed * Time.fixedDeltaTime * 1.1f))
@@ -396,6 +417,7 @@ public class CaptureTheFlagAgent : Agent
             Flag flag = collision.gameObject.GetComponent<Flag>();
             if (flag != null && flag.team != team && !hasFlag && !flag.isCarried)
             {
+                Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) PICKING UP FLAG!");
                 PickupFlag(flag);
             }
         }
@@ -409,11 +431,16 @@ public class CaptureTheFlagAgent : Agent
                 // If we're on the enemy side, we get sent to jail
                 if (IsOnEnemySide())
                 {
+                    if (hasFlag)
+                    {
+                        Debug.Log($"[{team}] {name} with FLAG sent to jail (was on enemy side)");
+                    }
                     SendToJail();
                 }
                 // If they're on our side and have our flag, they get sent to jail
                 else if (otherAgent.hasFlag && otherAgent.IsOnEnemySide())
                 {
+                    Debug.Log($"[{team}] {name} tagged flag carrier {otherAgent.name}");
                     otherAgent.SendToJail();
                     // Reward for successful tagging
                     RewardForTagging(otherAgent);
@@ -428,9 +455,22 @@ public class CaptureTheFlagAgent : Agent
         if (hasFlag && other.CompareTag("Base"))
         {
             Base baseObj = other.GetComponent<Base>();
+            
+            // Only debug when flag carrier touches their own base
             if (baseObj != null && baseObj.team == team)
             {
+                Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG entered OWN BASE!");
+                Debug.Log($"[{team}] {name} with FLAG - Base team: {baseObj.team}, my team: {team}");
+                Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG SCORING!!!");
                 ScoreFlag();
+            }
+            else if (baseObj != null)
+            {
+                Debug.Log($"[{team}] {name} with FLAG entered WRONG team's base (theirs: {baseObj.team}, mine: {team})");
+            }
+            else
+            {
+                Debug.Log($"[{team}] {name} with FLAG - Base object has no Base component!");
             }
         }
     }
@@ -453,6 +493,8 @@ public class CaptureTheFlagAgent : Agent
         
         // BIG reward for getting the flag
         AddReward(getFlagReward);
+        
+        Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) GOT THE FLAG! Position: {transform.position}");
     }
     
     void ScoreFlag()
@@ -473,10 +515,18 @@ public class CaptureTheFlagAgent : Agent
         
         // Reward for scoring a flag
         AddReward(returnFlagReward);
+        
+        Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) SCORED! Position: {transform.position}");
     }
     
     public void SendToJail()
     {
+        // Only debug if this agent has a flag
+        if (hasFlag)
+        {
+            Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG SENT TO JAIL - dropping flag!");
+        }
+        
         // Return the flag if we have it
         if (hasFlag)
         {
@@ -507,15 +557,16 @@ public class CaptureTheFlagAgent : Agent
     {
         inJail = false;
         transform.position = releasePosition.position;
+        Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) RELEASED FROM JAIL!");
     }
     
     public bool IsOnOwnSide()
     {
         // Assuming field is divided at x=0
         if (team == Team.Red)
-            return transform.position.x >0;
+            return transform.position.x > 0;
         else
-            return transform.position.x <0;
+            return transform.position.x < 0;
     }
     
     public bool IsOnEnemySide()
@@ -532,4 +583,4 @@ public class CaptureTheFlagAgent : Agent
     {
         return inJail;
     }
-}
+} 
