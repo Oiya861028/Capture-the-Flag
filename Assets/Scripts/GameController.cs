@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using static CaptureTheFlagAgent;
+using TMPro; // Add this for TextMeshPro
 
 public class GameManager : MonoBehaviour
 {
     [Header("Game Settings")]
     public int scoreToWin = 3;
     public int maxSteps = 10000;
+    
+    [Header("UI")]
+    public TextMeshPro scoreText; // Drag your text component here
     
     [Header("Team Setup")]
     public Transform redTeamParent;
@@ -79,6 +83,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         ResetGame();
+        UpdateScoreDisplay(); // Initialize the score display
     }
     
     void FixedUpdate()
@@ -179,6 +184,15 @@ public class GameManager : MonoBehaviour
         }
     }
     
+    // NEW: Update the score display
+    private void UpdateScoreDisplay()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = $"Red: {redScore}  |  Blue: {blueScore}";
+        }
+    }
+    
     public void ResetGame()
     {
         // Reset scores and state
@@ -200,6 +214,9 @@ public class GameManager : MonoBehaviour
         {
             agent.OnEpisodeBegin();
         }
+        
+        // Update the score display after reset
+        UpdateScoreDisplay();
     }
     
     private void ResetFlags()
@@ -237,19 +254,31 @@ public class GameManager : MonoBehaviour
         
         if (flagTeam == Team.Red)
         {
-            // Penalty for team whose flag was stolen
+            // Individual penalty for team whose flag was stolen
             foreach (var agent in redAgents)
             {
                 agent.AddReward(-0.5f);
             }
+            
+            // GROUP REWARD: Blue team gets group reward for coordinated flag capture
+            blueTeamGroup.AddGroupReward(0.3f);
+            
+            // GROUP PENALTY: Red team gets group penalty for losing flag
+            redTeamGroup.AddGroupReward(-0.3f);
         }
         else
         {
-            // Penalty for team whose flag was stolen
+            // Individual penalty for team whose flag was stolen
             foreach (var agent in blueAgents)
             {
                 agent.AddReward(-0.5f);
             }
+            
+            // GROUP REWARD: Red team gets group reward for coordinated flag capture
+            redTeamGroup.AddGroupReward(0.3f);
+            
+            // GROUP PENALTY: Blue team gets group penalty for losing flag
+            blueTeamGroup.AddGroupReward(-0.3f);
         }
     }
     
@@ -261,6 +290,12 @@ public class GameManager : MonoBehaviour
         {
             redScore++;
             Debug.Log($"RED TEAM SCORES! Score: {redScore}/{scoreToWin}");
+            
+            // BIG GROUP REWARD for scoring team
+            redTeamGroup.AddGroupReward(1.0f);
+            
+            // GROUP PENALTY for team that got scored on
+            blueTeamGroup.AddGroupReward(-0.5f);
             
             // Return blue flag
             if (blueFlagObject != null)
@@ -297,8 +332,11 @@ public class GameManager : MonoBehaviour
             if (redScore >= scoreToWin)
             {
                 Debug.Log("RED TEAM WINS!");
-                redTeamGroup.AddGroupReward(1.0f);
-                blueTeamGroup.AddGroupReward(-1.0f);
+                
+                // MASSIVE group rewards for winning/losing
+                redTeamGroup.AddGroupReward(2.0f);  // Winner bonus
+                blueTeamGroup.AddGroupReward(-2.0f); // Loser penalty
+                
                 EndEpisode();
             }
         }
@@ -306,6 +344,12 @@ public class GameManager : MonoBehaviour
         {
             blueScore++;
             Debug.Log($"BLUE TEAM SCORES! Score: {blueScore}/{scoreToWin}");
+            
+            // BIG GROUP REWARD for scoring team
+            blueTeamGroup.AddGroupReward(1.0f);
+            
+            // GROUP PENALTY for team that got scored on
+            redTeamGroup.AddGroupReward(-0.5f);
             
             // Return red flag
             if (redFlagObject != null)
@@ -342,13 +386,19 @@ public class GameManager : MonoBehaviour
             if (blueScore >= scoreToWin)
             {
                 Debug.Log("BLUE TEAM WINS!");
-                blueTeamGroup.AddGroupReward(1.0f);
-                redTeamGroup.AddGroupReward(-1.0f);
+                
+                // MASSIVE group rewards for winning/losing
+                blueTeamGroup.AddGroupReward(2.0f);  // Winner bonus
+                redTeamGroup.AddGroupReward(-2.0f); // Loser penalty
+                
                 EndEpisode();
             }
         }
+        
+        // Update the score display after scoring
+        UpdateScoreDisplay();
     }
-    
+
     public void ReturnFlag(Team flagTeam)
     {
         Debug.Log($"Returning {flagTeam} flag to base");
@@ -368,6 +418,37 @@ public class GameManager : MonoBehaviour
             
             Flag blueFlagComponent = blueFlagObject.GetComponent<Flag>();
             if (blueFlagComponent != null) blueFlagComponent.isCarried = false;
+        }
+    }
+    
+    // NEW METHOD: Add group rewards for successful defensive plays
+    public void SuccessfulTag(Team taggingTeam, bool wasCarryingFlag)
+    {
+        if (wasCarryingFlag)
+        {
+            // Extra group reward for tagging flag carrier
+            if (taggingTeam == Team.Red)
+            {
+                redTeamGroup.AddGroupReward(0.5f);
+                blueTeamGroup.AddGroupReward(-0.2f);
+            }
+            else
+            {
+                blueTeamGroup.AddGroupReward(0.5f);
+                redTeamGroup.AddGroupReward(-0.2f);
+            }
+        }
+        else
+        {
+            // Smaller group reward for regular tags
+            if (taggingTeam == Team.Red)
+            {
+                redTeamGroup.AddGroupReward(0.1f);
+            }
+            else
+            {
+                blueTeamGroup.AddGroupReward(0.1f);
+            }
         }
     }
     

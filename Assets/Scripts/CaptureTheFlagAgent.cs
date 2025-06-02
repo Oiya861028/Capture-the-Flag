@@ -30,13 +30,12 @@ public class CaptureTheFlagAgent : Agent
     public float rayAngle = 120f;
     
     [Header("Reward Settings")]
-    public float getFlagReward = 0.5f;
-    public float returnFlagReward = 1.0f;
+    public float getFlagReward = 0.8f;
+    public float returnFlagReward = 1.5f;
     public float tagOpponentReward = 0.1f;
     public float tagFlagCarrierReward = 0.3f;
     public float jailedPenalty = -0.2f;
     public float idlePenalty = -0.01f;
-
     
     // State variables
     private bool hasFlag = false;
@@ -259,7 +258,6 @@ public class CaptureTheFlagAgent : Agent
         // Skip if in jail
         if (inJail) return;
         
-        
         // Reward for moving toward enemy flag when on offense
         if (!hasFlag && enemyFlag.gameObject.activeSelf && IsOnEnemySide())
         {
@@ -353,13 +351,21 @@ public class CaptureTheFlagAgent : Agent
     
     private void RewardForTagging(CaptureTheFlagAgent taggedAgent)
     {
-        // Base reward for tagging
+        // Individual reward for tagging
         AddReward(tagOpponentReward);
         
-        // Extra reward if they were carrying our flag
-        if (taggedAgent.hasFlag)
+        bool wasCarryingFlag = taggedAgent.hasFlag;
+        
+        // Extra individual reward if they were carrying our flag
+        if (wasCarryingFlag)
         {
             AddReward(tagFlagCarrierReward);
+        }
+        
+        // NEW: Notify GameManager for group rewards
+        if (gameManager != null)
+        {
+            gameManager.SuccessfulTag(team, wasCarryingFlag);
         }
     }
     
@@ -574,4 +580,4 @@ public class CaptureTheFlagAgent : Agent
     {
         return inJail;
     }
-} 
+}
