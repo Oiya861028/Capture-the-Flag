@@ -36,7 +36,7 @@ public class CaptureTheFlagAgent : Agent
     public float tagFlagCarrierReward = 0.3f;
     public float jailedPenalty = -0.2f;
     public float idlePenalty = -0.01f;
-    public float wallProximityPenalty = -0.01f;
+
     
     // State variables
     private bool hasFlag = false;
@@ -259,15 +259,6 @@ public class CaptureTheFlagAgent : Agent
         // Skip if in jail
         if (inJail) return;
         
-        // Small wall avoidance reward
-        if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, 1.0f))
-        {
-            if (hit.collider.CompareTag("Obstacle"))
-            {
-                // Penalty for being too close to walls
-                AddReward(wallProximityPenalty);
-            }
-        }
         
         // Reward for moving toward enemy flag when on offense
         if (!hasFlag && enemyFlag.gameObject.activeSelf && IsOnEnemySide())
