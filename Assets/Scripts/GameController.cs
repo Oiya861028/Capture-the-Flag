@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using static CaptureTheFlagAgent;
-using TMPro; // Add this for TextMeshPro
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -12,13 +12,13 @@ public class GameManager : MonoBehaviour
     public int maxSteps = 10000;
     
     [Header("UI")]
-    public TextMeshPro scoreText; // Drag your text component here
+    public TextMeshPro scoreText; 
     
     [Header("Team Setup")]
     public Transform redTeamParent;
     public Transform blueTeamParent;
     
-    // IMPORTANT: Use GameObject references instead of Transform
+
     public GameObject redFlagObject;
     public GameObject blueFlagObject;
     
@@ -44,41 +44,33 @@ public class GameManager : MonoBehaviour
     // Flag states
     private Vector3 redFlagStartPos;
     private Vector3 blueFlagStartPos;
-    
-    // Cached references to agents
     private List<CaptureTheFlagAgent> redAgents = new List<CaptureTheFlagAgent>();
     private List<CaptureTheFlagAgent> blueAgents = new List<CaptureTheFlagAgent>();
     
     void Awake()
     {
-        // Make sure flags have the Flag component
+
         if (redFlagObject != null) SetupFlag(redFlagObject.transform, Team.Red);
         if (blueFlagObject != null) SetupFlag(blueFlagObject.transform, Team.Blue);
         
-        // Make sure base areas have the Base component
+
         SetupBase(redBase, Team.Red);
         SetupBase(blueBase, Team.Blue);
         
-        // Initialize MA-POCA team groups
+
         redTeamGroup = new SimpleMultiAgentGroup();
         blueTeamGroup = new SimpleMultiAgentGroup();
         
-        // Find and setup agents
+
         FindAndSetupAgents();
         
-        // Save flag starting positions
+
         if (redFlagObject != null) redFlagStartPos = redFlagObject.transform.position;
         if (blueFlagObject != null) blueFlagStartPos = blueFlagObject.transform.position;
         
-        // Make sure we have the correct tags in the project
-        CheckAndCreateTags();
+
     }
-    
-    void CheckAndCreateTags()
-    {
-        // This won't actually create tags at runtime, but it's a reminder for you
-        Debug.Log("Make sure you have these tags in your project: Agent, Flag, Base, Obstacle");
-    }
+
     
     void Start()
     {
@@ -176,7 +168,7 @@ public class GameManager : MonoBehaviour
         {
             BoxCollider boxCollider = baseTransform.gameObject.AddComponent<BoxCollider>();
             boxCollider.isTrigger = true;
-            boxCollider.size = new Vector3(5, 1, 5); // Adjust size as needed
+            boxCollider.size = new Vector3(5, 1, 5); 
         }
         else
         {
@@ -184,7 +176,7 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    // NEW: Update the score display
+
     private void UpdateScoreDisplay()
     {
         if (scoreText != null)
@@ -195,13 +187,12 @@ public class GameManager : MonoBehaviour
     
     public void ResetGame()
     {
-        // Reset scores and state
+
         redScore = 0;
         blueScore = 0;
         currentStep = 0;
         gameActive = true;
         
-        // Reset flags
         ResetFlags();
         
         // Reset all agents
@@ -260,10 +251,10 @@ public class GameManager : MonoBehaviour
                 agent.AddReward(-0.5f);
             }
             
-            // GROUP REWARD: Blue team gets group reward for coordinated flag capture
+            // group reward: blue team gets group reward for coordinated flag capture
             blueTeamGroup.AddGroupReward(0.3f);
             
-            // GROUP PENALTY: Red team gets group penalty for losing flag
+            // Group reward:  Red team gets group penalty for losing flag
             redTeamGroup.AddGroupReward(-0.3f);
         }
         else
@@ -274,10 +265,10 @@ public class GameManager : MonoBehaviour
                 agent.AddReward(-0.5f);
             }
             
-            // GROUP REWARD: Red team gets group reward for coordinated flag capture
+            // Group reward: Red team gets group reward for coordinated flag capture
             redTeamGroup.AddGroupReward(0.3f);
             
-            // GROUP PENALTY: Blue team gets group penalty for losing flag
+            // Group rewaord: Blue team gets group penalty for losing flag
             blueTeamGroup.AddGroupReward(-0.3f);
         }
     }
@@ -291,13 +282,13 @@ public class GameManager : MonoBehaviour
             redScore++;
             Debug.Log($"RED TEAM SCORES! Score: {redScore}/{scoreToWin}");
             
-            // BIG GROUP REWARD for scoring team
+
             redTeamGroup.AddGroupReward(1.0f);
             
-            // GROUP PENALTY for team that got scored on
+
             blueTeamGroup.AddGroupReward(-0.5f);
             
-            // Return blue flag
+
             if (blueFlagObject != null)
             {
                 Debug.Log($"Attempting to return BLUE flag...");
@@ -305,7 +296,7 @@ public class GameManager : MonoBehaviour
                 
                 blueFlagObject.transform.position = blueFlagStartPos;
                 blueFlagObject.transform.rotation = Quaternion.identity;
-                blueFlagObject.SetActive(true); // This is the key line!
+                blueFlagObject.SetActive(true); 
                 
                 Flag blueFlagComponent = blueFlagObject.GetComponent<Flag>();
                 if (blueFlagComponent != null) 
@@ -315,11 +306,10 @@ public class GameManager : MonoBehaviour
                 
                 Debug.Log($"  After: Active={blueFlagObject.activeSelf}, Position={blueFlagObject.transform.position}");
                 
-                // Double-check it worked
+
                 if (!blueFlagObject.activeSelf)
                 {
                     Debug.LogError("BLUE FLAG FAILED TO ACTIVATE!");
-                    // Force it active
                     blueFlagObject.SetActive(true);
                 }
             }
@@ -333,7 +323,7 @@ public class GameManager : MonoBehaviour
             {
                 Debug.Log("RED TEAM WINS!");
                 
-                // MASSIVE group rewards for winning/losing
+                
                 redTeamGroup.AddGroupReward(2.0f);  // Winner bonus
                 blueTeamGroup.AddGroupReward(-2.0f); // Loser penalty
                 
@@ -345,13 +335,13 @@ public class GameManager : MonoBehaviour
             blueScore++;
             Debug.Log($"BLUE TEAM SCORES! Score: {blueScore}/{scoreToWin}");
             
-            // BIG GROUP REWARD for scoring team
+
             blueTeamGroup.AddGroupReward(1.0f);
             
-            // GROUP PENALTY for team that got scored on
+
             redTeamGroup.AddGroupReward(-0.5f);
             
-            // Return red flag
+
             if (redFlagObject != null)
             {
                 Debug.Log($"Attempting to return RED flag...");
@@ -359,7 +349,7 @@ public class GameManager : MonoBehaviour
                 
                 redFlagObject.transform.position = redFlagStartPos;
                 redFlagObject.transform.rotation = Quaternion.identity;
-                redFlagObject.SetActive(true); // This is the key line!
+                redFlagObject.SetActive(true); 
                 
                 Flag redFlagComponent = redFlagObject.GetComponent<Flag>();
                 if (redFlagComponent != null) 
@@ -369,11 +359,10 @@ public class GameManager : MonoBehaviour
                 
                 Debug.Log($"  After: Active={redFlagObject.activeSelf}, Position={redFlagObject.transform.position}");
                 
-                // Double-check it worked
+
                 if (!redFlagObject.activeSelf)
                 {
                     Debug.LogError("RED FLAG FAILED TO ACTIVATE!");
-                    // Force it active
                     redFlagObject.SetActive(true);
                 }
             }
@@ -382,12 +371,12 @@ public class GameManager : MonoBehaviour
                 Debug.LogError("RED FLAG OBJECT IS NULL!");
             }
             
-            // Check for win
+
             if (blueScore >= scoreToWin)
             {
                 Debug.Log("BLUE TEAM WINS!");
                 
-                // MASSIVE group rewards for winning/losing
+
                 blueTeamGroup.AddGroupReward(2.0f);  // Winner bonus
                 redTeamGroup.AddGroupReward(-2.0f); // Loser penalty
                 
@@ -395,7 +384,7 @@ public class GameManager : MonoBehaviour
             }
         }
         
-        // Update the score display after scoring
+
         UpdateScoreDisplay();
     }
 
@@ -421,12 +410,12 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    // NEW METHOD: Add group rewards for successful defensive plays
+
     public void SuccessfulTag(Team taggingTeam, bool wasCarryingFlag)
     {
         if (wasCarryingFlag)
         {
-            // Extra group reward for tagging flag carrier
+
             if (taggingTeam == Team.Red)
             {
                 redTeamGroup.AddGroupReward(0.5f);
@@ -440,7 +429,6 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // Smaller group reward for regular tags
             if (taggingTeam == Team.Red)
             {
                 redTeamGroup.AddGroupReward(0.1f);
@@ -454,14 +442,13 @@ public class GameManager : MonoBehaviour
     
     private void EndEpisode()
     {
-        Debug.Log($"=== EPISODE ENDING - Final Score: Red {redScore} - Blue {blueScore} ===");
+        Debug.Log($"EPISODE ENDING - Final Score: Red {redScore} - Blue {blueScore}");
         gameActive = false;
         
-        // End episode for both teams
+
         redTeamGroup.EndGroupEpisode();
         blueTeamGroup.EndGroupEpisode();
         
-        // Reset the game
         ResetGame();
     }
     

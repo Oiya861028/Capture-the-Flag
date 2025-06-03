@@ -22,7 +22,7 @@ public class CaptureTheFlagAgent : Agent
     public Transform enemyFlag;
     public Transform jailPosition;
     public Transform releasePosition;
-    public Transform ownBase;  // Reference to our team's base
+    public Transform ownBase;  
     
     [Header("Raycast Settings")]
     public float rayLength = 20f;
@@ -47,10 +47,8 @@ public class CaptureTheFlagAgent : Agent
     private GameManager gameManager;
     private Rigidbody rb;
     
-    // Visual indicator for flag
     public GameObject flagIndicator;
     
-    // Debug tracking
     private bool isHeuristicMode = false;
     
     // Setup these components properly on Awake
@@ -66,7 +64,7 @@ public class CaptureTheFlagAgent : Agent
             isHeuristicMode = (behaviorParams.BehaviorType == BehaviorType.HeuristicOnly);
         }
         
-        // Configure the behavior parameters for MA-POCA
+        // Configure the behavior parameters 
         if (behaviorParams != null)
         {
             behaviorParams.BehaviorName = "CaptureTheFlag";
@@ -210,11 +208,11 @@ public class CaptureTheFlagAgent : Agent
         float moveValue = moveAction - 1;
         float turnValue = turnAction - 1;
         
-        // Debug ONLY when agent has flag AND is close to their own base
+
         if (hasFlag && ownBase != null)
         {
             float distToBase = Vector3.Distance(transform.position, ownBase.position);
-            if (distToBase < 5f) // Only debug when within 5 units of base
+            if (distToBase < 5f) 
             {
                 Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG near OWN BASE - moving: {moveValue}, turning: {turnValue}, position: {transform.position}, distance: {distToBase:F2}");
             }
@@ -223,7 +221,7 @@ public class CaptureTheFlagAgent : Agent
         // Check if we would hit a wall before moving
         if (moveValue != 0 && !WouldHitWall(transform.forward * moveValue, moveSpeed * Time.fixedDeltaTime * 1.1f))
         {
-            // Apply movement if we won't hit a wall
+
             transform.Translate(0, 0, moveValue * moveSpeed * Time.fixedDeltaTime);
         }
         
@@ -236,7 +234,7 @@ public class CaptureTheFlagAgent : Agent
             AddReward(idlePenalty);
         }
         
-        // Apply positional rewards
+
         PositionalRewards();
     }
     
@@ -351,18 +349,15 @@ public class CaptureTheFlagAgent : Agent
     
     private void RewardForTagging(CaptureTheFlagAgent taggedAgent)
     {
-        // Individual reward for tagging
         AddReward(tagOpponentReward);
         
         bool wasCarryingFlag = taggedAgent.hasFlag;
         
-        // Extra individual reward if they were carrying our flag
         if (wasCarryingFlag)
         {
             AddReward(tagFlagCarrierReward);
         }
         
-        // NEW: Notify GameManager for group rewards
         if (gameManager != null)
         {
             gameManager.SuccessfulTag(team, wasCarryingFlag);
@@ -394,11 +389,10 @@ public class CaptureTheFlagAgent : Agent
     // Direct movement for testing - use only when behavior type is Heuristic
     void Update()
     {
-        // Only use direct controls if in Heuristic mode
         var behaviorParams = GetComponent<BehaviorParameters>();
         if (behaviorParams != null && behaviorParams.BehaviorType == BehaviorType.HeuristicOnly)
         {
-            // Request a decision manually to make sure the agent is updated
+           
             RequestDecision();
         }
     }
@@ -453,7 +447,6 @@ public class CaptureTheFlagAgent : Agent
         {
             Base baseObj = other.GetComponent<Base>();
             
-            // Only debug when flag carrier touches their own base
             if (baseObj != null && baseObj.team == team)
             {
                 Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG entered OWN BASE!");
@@ -488,7 +481,6 @@ public class CaptureTheFlagAgent : Agent
             gameManager.FlagPickedUp(team == Team.Red ? Team.Blue : Team.Red);
         }
         
-        // BIG reward for getting the flag
         AddReward(getFlagReward);
         
         Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) GOT THE FLAG! Position: {transform.position}");
@@ -559,7 +551,6 @@ public class CaptureTheFlagAgent : Agent
     
     public bool IsOnOwnSide()
     {
-        // Assuming field is divided at x=0
         if (team == Team.Red)
             return transform.position.x > 0;
         else
