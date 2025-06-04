@@ -27,7 +27,7 @@ public class CaptureTheFlagAgent : Agent
     [Header("Raycast Settings")]
     public float rayLength = 20f;
     public int numRays = 5;
-    public float rayAngle = 120f;
+    public float rayAngle = 120f;  
     
     [Header("Reward Settings")]
     public float getFlagReward = 0.8f;
@@ -42,34 +42,22 @@ public class CaptureTheFlagAgent : Agent
     private bool inJail = false;
     private float jailTimer = 0f;
     private const float jailTime = 10f;
-    private Vector3 startPosition;
-    private Quaternion startRotation;
     private GameManager gameManager;
     private Rigidbody rb;
     
     public GameObject flagIndicator;
     
-    private bool isHeuristicMode = false;
-    
-    // Setup these components properly on Awake
-    protected override void Awake()
+    public override void Initialize()
     {
-        base.Awake();
+        gameManager = FindFirstObjectByType<GameManager>();
+        rb = GetComponent<Rigidbody>();
         
-        // Set team ID matching our team
+        // Set behavior name and observation size to match config
         var behaviorParams = GetComponent<BehaviorParameters>();
-        if (behaviorParams != null)
-        {
-            behaviorParams.TeamId = (int)team;
-            isHeuristicMode = (behaviorParams.BehaviorType == BehaviorType.HeuristicOnly);
-        }
-        
-        // Configure the behavior parameters 
         if (behaviorParams != null)
         {
             behaviorParams.BehaviorName = "CaptureTheFlag";
             behaviorParams.BrainParameters.VectorObservationSize = 10; // 10 vector observations
-            behaviorParams.BrainParameters.NumStackedVectorObservations = 1;
             
             // Set up discrete actions with a new ActionSpec (2 discrete actions with 3 options each)
             behaviorParams.BrainParameters.ActionSpec = ActionSpec.MakeDiscrete(3, 3);
@@ -90,38 +78,6 @@ public class CaptureTheFlagAgent : Agent
             sensorComponent.SensorName = $"{team}Agent_RaySensor";
         }
         
-        // Make sure we have a rigidbody
-        rb = GetComponent<Rigidbody>();
-        if (rb == null)
-        {
-            rb = gameObject.AddComponent<Rigidbody>();
-            rb.freezeRotation = true;
-            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-            rb.constraints = RigidbodyConstraints.FreezePositionY | 
-                            RigidbodyConstraints.FreezeRotationX | 
-                            RigidbodyConstraints.FreezeRotationZ;
-        }
-        
-        // Make sure we have a collider
-        if (GetComponent<Collider>() == null)
-        {
-            CapsuleCollider capsuleCollider = gameObject.AddComponent<CapsuleCollider>();
-            capsuleCollider.height = 2f;
-            capsuleCollider.radius = 0.5f;
-        }
-        
-        // Set the tag
-        gameObject.tag = "Agent";
-    }
-    
-    public override void Initialize()
-    {
-        gameManager = FindFirstObjectByType<GameManager>();
-        
-        // Initialize position and rotation
-        startPosition = transform.position;
-        startRotation = transform.rotation;
-        
         if (flagIndicator != null)
         {
             flagIndicator.SetActive(false);
@@ -141,22 +97,12 @@ public class CaptureTheFlagAgent : Agent
         inJail = false;
         jailTimer = 0f;
         
-        // Reset position and rotation
-        transform.position = startPosition;
-        transform.rotation = startRotation;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         
         if (flagIndicator != null)
         {
             flagIndicator.SetActive(false);
-        }
-        
-        // Update heuristic mode status
-        var behaviorParams = GetComponent<BehaviorParameters>();
-        if (behaviorParams != null)
-        {
-            isHeuristicMode = (behaviorParams.BehaviorType == BehaviorType.HeuristicOnly);
         }
     }
     
@@ -208,20 +154,9 @@ public class CaptureTheFlagAgent : Agent
         float moveValue = moveAction - 1;
         float turnValue = turnAction - 1;
         
-
-        if (hasFlag && ownBase != null)
+        // Apply movement
+        if (moveValue != 0)
         {
-            float distToBase = Vector3.Distance(transform.position, ownBase.position);
-            if (distToBase < 5f) 
-            {
-                Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG near OWN BASE - moving: {moveValue}, turning: {turnValue}, position: {transform.position}, distance: {distToBase:F2}");
-            }
-        }
-        
-        // Check if we would hit a wall before moving
-        if (moveValue != 0 && !WouldHitWall(transform.forward * moveValue, moveSpeed * Time.fixedDeltaTime * 1.1f))
-        {
-
             transform.Translate(0, 0, moveValue * moveSpeed * Time.fixedDeltaTime);
         }
         
@@ -234,21 +169,7 @@ public class CaptureTheFlagAgent : Agent
             AddReward(idlePenalty);
         }
         
-
         PositionalRewards();
-    }
-    
-    bool WouldHitWall(Vector3 moveDirection, float distance)
-    {
-        // Cast a ray to check if we would hit a wall
-        if (Physics.Raycast(transform.position, moveDirection, out RaycastHit hit, distance))
-        {
-            if (hit.collider.CompareTag("Obstacle"))
-            {
-                return true; // Would hit a wall
-            }
-        }
-        return false; // Safe to move
     }
     
     private void PositionalRewards()
@@ -386,17 +307,6 @@ public class CaptureTheFlagAgent : Agent
             discreteActions[1] = 1; // No turning
     }
     
-    // Direct movement for testing - use only when behavior type is Heuristic
-    void Update()
-    {
-        var behaviorParams = GetComponent<BehaviorParameters>();
-        if (behaviorParams != null && behaviorParams.BehaviorType == BehaviorType.HeuristicOnly)
-        {
-           
-            RequestDecision();
-        }
-    }
-    
     void OnCollisionEnter(Collision collision)
     {
         // If in jail, do nothing
@@ -408,7 +318,6 @@ public class CaptureTheFlagAgent : Agent
             Flag flag = collision.gameObject.GetComponent<Flag>();
             if (flag != null && flag.team != team && !hasFlag && !flag.isCarried)
             {
-                Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) PICKING UP FLAG!");
                 PickupFlag(flag);
             }
         }
@@ -422,16 +331,11 @@ public class CaptureTheFlagAgent : Agent
                 // If we're on the enemy side, we get sent to jail
                 if (IsOnEnemySide())
                 {
-                    if (hasFlag)
-                    {
-                        Debug.Log($"[{team}] {name} with FLAG sent to jail (was on enemy side)");
-                    }
                     SendToJail();
                 }
                 // If they're on our side and have our flag, they get sent to jail
                 else if (otherAgent.hasFlag && otherAgent.IsOnEnemySide())
                 {
-                    Debug.Log($"[{team}] {name} tagged flag carrier {otherAgent.name}");
                     otherAgent.SendToJail();
                     // Reward for successful tagging
                     RewardForTagging(otherAgent);
@@ -449,18 +353,7 @@ public class CaptureTheFlagAgent : Agent
             
             if (baseObj != null && baseObj.team == team)
             {
-                Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG entered OWN BASE!");
-                Debug.Log($"[{team}] {name} with FLAG - Base team: {baseObj.team}, my team: {team}");
-                Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG SCORING!!!");
                 ScoreFlag();
-            }
-            else if (baseObj != null)
-            {
-                Debug.Log($"[{team}] {name} with FLAG entered WRONG team's base (theirs: {baseObj.team}, mine: {team})");
-            }
-            else
-            {
-                Debug.Log($"[{team}] {name} with FLAG - Base object has no Base component!");
             }
         }
     }
@@ -482,8 +375,6 @@ public class CaptureTheFlagAgent : Agent
         }
         
         AddReward(getFlagReward);
-        
-        Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) GOT THE FLAG! Position: {transform.position}");
     }
     
     void ScoreFlag()
@@ -504,18 +395,10 @@ public class CaptureTheFlagAgent : Agent
         
         // Reward for scoring a flag
         AddReward(returnFlagReward);
-        
-        Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) SCORED! Position: {transform.position}");
     }
     
     public void SendToJail()
     {
-        // Only debug if this agent has a flag
-        if (hasFlag)
-        {
-            Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) with FLAG SENT TO JAIL - dropping flag!");
-        }
-        
         // Return the flag if we have it
         if (hasFlag)
         {
@@ -546,7 +429,6 @@ public class CaptureTheFlagAgent : Agent
     {
         inJail = false;
         transform.position = releasePosition.position;
-        Debug.Log($"[{team}] {name} ({(isHeuristicMode ? "HEURISTIC" : "ML-AGENT")}) RELEASED FROM JAIL!");
     }
     
     public bool IsOnOwnSide()
