@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     public Transform redTeamParent;
     public Transform blueTeamParent;
     
+
     public GameObject redFlagObject;
     public GameObject blueFlagObject;
     
@@ -48,25 +49,33 @@ public class GameManager : MonoBehaviour
     
     void Awake()
     {
+
         if (redFlagObject != null) SetupFlag(redFlagObject.transform, Team.Red);
         if (blueFlagObject != null) SetupFlag(blueFlagObject.transform, Team.Blue);
         
+
         SetupBase(redBase, Team.Red);
         SetupBase(blueBase, Team.Blue);
         
+
         redTeamGroup = new SimpleMultiAgentGroup();
         blueTeamGroup = new SimpleMultiAgentGroup();
         
+
         FindAndSetupAgents();
         
+
         if (redFlagObject != null) redFlagStartPos = redFlagObject.transform.position;
         if (blueFlagObject != null) blueFlagStartPos = blueFlagObject.transform.position;
+        
+
     }
+
     
     void Start()
     {
         ResetGame();
-        UpdateScoreDisplay();
+        UpdateScoreDisplay(); // Initialize the score display
     }
     
     void FixedUpdate()
@@ -76,6 +85,7 @@ public class GameManager : MonoBehaviour
         currentStep++;
         if (currentStep >= maxSteps)
         {
+            // End episode due to max steps
             EndEpisode();
         }
     }
@@ -152,6 +162,7 @@ public class GameManager : MonoBehaviour
         baseComponent.team = team;
         baseTransform.gameObject.tag = "Base";
         
+        // Make sure it has a trigger collider
         Collider collider = baseTransform.GetComponent<Collider>();
         if (collider == null)
         {
@@ -165,6 +176,7 @@ public class GameManager : MonoBehaviour
         }
     }
     
+
     private void UpdateScoreDisplay()
     {
         if (scoreText != null)
@@ -175,6 +187,7 @@ public class GameManager : MonoBehaviour
     
     public void ResetGame()
     {
+
         redScore = 0;
         blueScore = 0;
         currentStep = 0;
@@ -193,6 +206,7 @@ public class GameManager : MonoBehaviour
             agent.OnEpisodeBegin();
         }
         
+        // Update the score display after reset
         UpdateScoreDisplay();
     }
     
@@ -207,6 +221,8 @@ public class GameManager : MonoBehaviour
             
             Flag redFlagComponent = redFlagObject.GetComponent<Flag>();
             if (redFlagComponent != null) redFlagComponent.isCarried = false;
+            
+            Debug.Log($"Red flag reset - Active: {redFlagObject.activeSelf}, Position: {redFlagObject.transform.position}");
         }
         
         // Reset blue flag
@@ -218,11 +234,15 @@ public class GameManager : MonoBehaviour
             
             Flag blueFlagComponent = blueFlagObject.GetComponent<Flag>();
             if (blueFlagComponent != null) blueFlagComponent.isCarried = false;
+            
+            Debug.Log($"Blue flag reset - Active: {blueFlagObject.activeSelf}, Position: {blueFlagObject.transform.position}");
         }
     }
     
     public void FlagPickedUp(Team flagTeam)
     {
+        Debug.Log($"{flagTeam} flag was picked up!");
+        
         if (flagTeam == Team.Red)
         {
             // Individual penalty for team whose flag was stolen
@@ -231,10 +251,10 @@ public class GameManager : MonoBehaviour
                 agent.AddReward(-0.5f);
             }
             
-            // Group reward: blue team gets group reward for coordinated flag capture
+            // group reward: blue team gets group reward for coordinated flag capture
             blueTeamGroup.AddGroupReward(0.3f);
             
-            // Group reward: Red team gets group penalty for losing flag
+            // Group reward:  Red team gets group penalty for losing flag
             redTeamGroup.AddGroupReward(-0.3f);
         }
         else
@@ -248,22 +268,32 @@ public class GameManager : MonoBehaviour
             // Group reward: Red team gets group reward for coordinated flag capture
             redTeamGroup.AddGroupReward(0.3f);
             
-            // Group reward: Blue team gets group penalty for losing flag
+            // Group rewaord: Blue team gets group penalty for losing flag
             blueTeamGroup.AddGroupReward(-0.3f);
         }
     }
     
     public void ScoreFlag(Team scoringTeam)
     {
+        Debug.Log($"=== SCORE FLAG CALLED - {scoringTeam} team scores! ===");
+        
         if (scoringTeam == Team.Red)
         {
             redScore++;
+            Debug.Log($"RED TEAM SCORES! Score: {redScore}/{scoreToWin}");
             
+
             redTeamGroup.AddGroupReward(1.0f);
+            
+
             blueTeamGroup.AddGroupReward(-0.5f);
             
+
             if (blueFlagObject != null)
             {
+                Debug.Log($"Attempting to return BLUE flag...");
+                Debug.Log($"  Before: Active={blueFlagObject.activeSelf}, Position={blueFlagObject.transform.position}");
+                
                 blueFlagObject.transform.position = blueFlagStartPos;
                 blueFlagObject.transform.rotation = Quaternion.identity;
                 blueFlagObject.SetActive(true); 
@@ -273,11 +303,27 @@ public class GameManager : MonoBehaviour
                 {
                     blueFlagComponent.isCarried = false;
                 }
+                
+                Debug.Log($"  After: Active={blueFlagObject.activeSelf}, Position={blueFlagObject.transform.position}");
+                
+
+                if (!blueFlagObject.activeSelf)
+                {
+                    Debug.LogError("BLUE FLAG FAILED TO ACTIVATE!");
+                    blueFlagObject.SetActive(true);
+                }
+            }
+            else
+            {
+                Debug.LogError("BLUE FLAG OBJECT IS NULL!");
             }
             
             // Check for win
             if (redScore >= scoreToWin)
             {
+                Debug.Log("RED TEAM WINS!");
+                
+                
                 redTeamGroup.AddGroupReward(2.0f);  // Winner bonus
                 blueTeamGroup.AddGroupReward(-2.0f); // Loser penalty
                 
@@ -287,12 +333,20 @@ public class GameManager : MonoBehaviour
         else // Blue team scores
         {
             blueScore++;
+            Debug.Log($"BLUE TEAM SCORES! Score: {blueScore}/{scoreToWin}");
             
+
             blueTeamGroup.AddGroupReward(1.0f);
+            
+
             redTeamGroup.AddGroupReward(-0.5f);
             
+
             if (redFlagObject != null)
             {
+                Debug.Log($"Attempting to return RED flag...");
+                Debug.Log($"  Before: Active={redFlagObject.activeSelf}, Position={redFlagObject.transform.position}");
+                
                 redFlagObject.transform.position = redFlagStartPos;
                 redFlagObject.transform.rotation = Quaternion.identity;
                 redFlagObject.SetActive(true); 
@@ -302,10 +356,27 @@ public class GameManager : MonoBehaviour
                 {
                     redFlagComponent.isCarried = false;
                 }
+                
+                Debug.Log($"  After: Active={redFlagObject.activeSelf}, Position={redFlagObject.transform.position}");
+                
+
+                if (!redFlagObject.activeSelf)
+                {
+                    Debug.LogError("RED FLAG FAILED TO ACTIVATE!");
+                    redFlagObject.SetActive(true);
+                }
+            }
+            else
+            {
+                Debug.LogError("RED FLAG OBJECT IS NULL!");
             }
             
+
             if (blueScore >= scoreToWin)
             {
+                Debug.Log("BLUE TEAM WINS!");
+                
+
                 blueTeamGroup.AddGroupReward(2.0f);  // Winner bonus
                 redTeamGroup.AddGroupReward(-2.0f); // Loser penalty
                 
@@ -313,11 +384,14 @@ public class GameManager : MonoBehaviour
             }
         }
         
+
         UpdateScoreDisplay();
     }
 
     public void ReturnFlag(Team flagTeam)
     {
+        Debug.Log($"Returning {flagTeam} flag to base");
+        
         if (flagTeam == Team.Red && redFlagObject != null)
         {
             redFlagObject.transform.position = redFlagStartPos;
@@ -336,10 +410,12 @@ public class GameManager : MonoBehaviour
         }
     }
     
+
     public void SuccessfulTag(Team taggingTeam, bool wasCarryingFlag)
     {
         if (wasCarryingFlag)
         {
+
             if (taggingTeam == Team.Red)
             {
                 redTeamGroup.AddGroupReward(0.5f);
@@ -366,11 +442,55 @@ public class GameManager : MonoBehaviour
     
     private void EndEpisode()
     {
+        Debug.Log($"EPISODE ENDING - Final Score: Red {redScore} - Blue {blueScore}");
         gameActive = false;
         
+
         redTeamGroup.EndGroupEpisode();
         blueTeamGroup.EndGroupEpisode();
         
         ResetGame();
+    }
+    
+    // Debug methods
+    [ContextMenu("Debug Flag States")]
+    public void ManualDebugFlagStates()
+    {
+        Debug.Log("=== FLAG STATES ===");
+        if (redFlagObject != null)
+        {
+            Flag redFlagComp = redFlagObject.GetComponent<Flag>();
+            Debug.Log($"RED FLAG: Active={redFlagObject.activeSelf}, Position={redFlagObject.transform.position}, isCarried={redFlagComp?.isCarried}");
+        }
+        else
+        {
+            Debug.Log("RED FLAG OBJECT IS NULL!");
+        }
+        
+        if (blueFlagObject != null)
+        {
+            Flag blueFlagComp = blueFlagObject.GetComponent<Flag>();
+            Debug.Log($"BLUE FLAG: Active={blueFlagObject.activeSelf}, Position={blueFlagObject.transform.position}, isCarried={blueFlagComp?.isCarried}");
+        }
+        else
+        {
+            Debug.Log("BLUE FLAG OBJECT IS NULL!");
+        }
+    }
+    
+    [ContextMenu("Force Activate Flags")]
+    public void ForceActivateFlags()
+    {
+        if (redFlagObject != null)
+        {
+            redFlagObject.SetActive(true);
+            Debug.Log($"Red flag forced active: {redFlagObject.activeSelf}");
+        }
+        
+        if (blueFlagObject != null)
+        {
+            blueFlagObject.SetActive(true);
+            Debug.Log($"Blue flag forced active: {blueFlagObject.activeSelf}");
+        }
     }
 }
